@@ -6,14 +6,55 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 )
 
+type Inspector struct {
+	subset *map[string]interface{}
+}
+
+func NewInspector(tree *map[string]interface{}) *Inspector {
+	ins := new(Inspector)
+	ins.subset = tree
+	return ins
+}
+
+// Return the entire tree raw
+func (ins *Inspector) Raw() *map[string]interface{} {
+	return ins.subset
+}
+
+// String returns a string type of a config value.
+func (ins *Inspector) String(key string, overlay string) string {
+	if overlay != "" {
+		return overlay
+	}
+	return fmt.Sprintf("%s", (*ins.subset)[key])
+}
+
+// Int returns an integer type of a config value.
+func (ins *Inspector) Int(key string, overlay string) int {
+	var v string
+	if overlay != "" {
+		v = overlay
+	} else {
+		v = fmt.Sprintf("%d", (*ins.subset)[key])
+	}
+	data, err := strconv.Atoi(v)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
 type Config struct {
-	data map[string]interface{}
+	data      map[string]interface{}
+	separator string
 }
 
 func NewConfig(cfgpath string) *Config {
 	cfg := new(Config)
+	cfg.separator = ":"
 
 	fh, err := os.Open(cfgpath)
 	if err != nil {
@@ -32,30 +73,43 @@ func NewConfig(cfgpath string) *Config {
 	return cfg
 }
 
+// SetSeparator sets a separator for Find path. Default is ":".
+func (cfg *Config) SetSeparator(sep string) *Config {
+	cfg.separator = sep
+	return cfg
+}
+
 // GetContent returns a content of the configuration
-func (cfg *Config) GetContent() map[string]interface{} {
-	return cfg.data
+func (cfg *Config) Root() *Inspector {
+	return NewInspector(&cfg.data)
 }
 
-// String returns a string type of a config value.
-func (cfg *Config) String(key string, overlay string) string {
-	if overlay != "" {
-		return overlay
+func (cfg *Config) shift(levelPath string, subset map[interface{}]interface{}) map[interface{}]interface{} {
+	if subset == nil {
+		subset = make(map[interface{}]interface{})
+		for k, v := range cfg.data {
+			subset[k] = v
+		}
 	}
-	return fmt.Sprintf("%s", cfg.data[key])
+	lpath := strings.Split(levelPath, cfg.separator)
+
+	for idx, offset := range lpath {
+		idx++
+		subset = subset[offset].(map[interface{}]interface{})
+		if subset != nil && len(lpath[idx:]) > 0 {
+			subset = cfg.shift(strings.Join(lpath[idx:], cfg.separator), subset)
+		}
+	}
+	return subset
 }
 
-// Int returns an integer type of a config value.
-func (cfg *Config) Int(key string, overlay string) int {
-	var v string
-	if overlay != "" {
-		v = overlay
-	} else {
-		v = fmt.Sprintf("%d", cfg.data[key])
+// Find returns a context of the tree config.
+// Each YAML-based config is basically a tree. So Find resets the
+// root of the tree to a specific point.
+func (cfg *Config) Find(levelPath string) *Inspector {
+	subset := make(map[string]interface{})
+	for k, v := range cfg.shift(levelPath, nil) {
+		subset[k.(string)] = v
 	}
-	data, err := strconv.Atoi(v)
-	if err != nil {
-		panic(err)
-	}
-	return data
+	return NewInspector(&subset)
 }
