@@ -1,6 +1,7 @@
 package nanoconf
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-yaml/yaml"
 	"io/ioutil"
@@ -33,16 +34,31 @@ func (ins *Inspector) String(key string, overlay string) string {
 }
 
 // Int returns an integer type of a config value.
-func (ins *Inspector) Int(key string, overlay string) int {
+func (ins *Inspector) Int(key string, overlay string) (int, error) {
 	var v string
+	var err error
+	var data int
 	if overlay != "" {
 		v = overlay
 	} else {
-		v = fmt.Sprintf("%d", (*ins.subset)[key])
+		if (*ins.subset)[key] != nil {
+			v = fmt.Sprintf("%d", (*ins.subset)[key])
+		} else {
+			err = errors.New("Value not found")
+		}
 	}
-	data, err := strconv.Atoi(v)
+	if err == nil {
+		data, err = strconv.Atoi(v)
+	}
+
+	return data, err
+}
+
+// DefaultInt is a wrapper around Int method, allowing return default value, in case nothing has been found.
+func (ins *Inspector) DefaultInt(val string, overlay string, defaultValue int) int {
+	data, err := ins.Int(val, overlay)
 	if err != nil {
-		panic(err)
+		data = defaultValue
 	}
 	return data
 }
