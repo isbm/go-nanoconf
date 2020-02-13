@@ -62,7 +62,7 @@ func (nf *NanoconfFinder) FindAll() []string {
 	for _, pth := range nf.paths {
 		for _, nm := range nf.names {
 			cfgpth := path.Join(pth, nm)
-			if fh, err := os.Stat(cfgpth); os.IsExist(err) && !fh.IsDir() {
+			if fh, err := os.Stat(cfgpth); !os.IsNotExist(err) && !fh.IsDir() {
 				configs = append(configs, cfgpth)
 			}
 		}
