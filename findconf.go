@@ -16,9 +16,10 @@ import (
 )
 
 type NanoconfFinder struct {
-	appname string
-	names   []string
-	paths   []string
+	appname     string
+	defaultconf string
+	names       []string
+	paths       []string
 }
 
 // Constructor
@@ -50,7 +51,7 @@ func (nf *NanoconfFinder) FindFirst() string {
 	var pth string
 	config := nf.FindAll()
 	if len(config) > 0 {
-		pth = config[0]
+		pth = config[len(config)-1]
 	}
 	return pth
 }
@@ -67,6 +68,19 @@ func (nf *NanoconfFinder) FindAll() []string {
 		}
 	}
 	return configs
+}
+
+// FindDefault returns assumed confguration that could be default, unless it is pre-set.
+func (nf *NanoconfFinder) FindDefault() string {
+	if nf.defaultconf != "" {
+		return nf.defaultconf
+	}
+	return path.Join("/etc", nf.appname+".conf")
+}
+
+func (nf *NanoconfFinder) SetDefaultConfig(cfgpath string) *NanoconfFinder {
+	nf.defaultconf = cfgpath
+	return nf
 }
 
 // CleanPaths removes all the paths from the stack
