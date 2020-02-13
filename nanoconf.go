@@ -54,7 +54,9 @@ func (ins *Inspector) Int(key string, overlay string) (int, error) {
 	return data, err
 }
 
-// DefaultInt is a wrapper around Int method, allowing return default value, in case nothing has been found.
+// DefaultInt is a wrapper around Int method, allowing return default value,
+// in case nothing has been found. Overlay value is an empty string and it
+// doesn't mean 0, but nil.
 func (ins *Inspector) DefaultInt(val string, overlay string, defaultValue int) int {
 	data, err := ins.Int(val, overlay)
 	if err != nil {
