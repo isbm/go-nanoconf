@@ -3,11 +3,12 @@ package nanoconf
 import (
 	"errors"
 	"fmt"
-	"github.com/go-yaml/yaml"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/go-yaml/yaml"
 )
 
 type Inspector struct {
