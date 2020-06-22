@@ -114,9 +114,11 @@ func (cfg *Config) shift(levelPath string, subset map[interface{}]interface{}) m
 
 	for idx, offset := range lpath {
 		idx++
-		subset = subset[offset].(map[interface{}]interface{})
-		if subset != nil && len(lpath[idx:]) > 1 {
-			subset = cfg.shift(strings.Join(lpath[idx:], cfg.separator), subset)
+		if subset[offset] != nil {
+			subset = subset[offset].(map[interface{}]interface{})
+			if len(lpath[idx:]) > 1 {
+				subset = cfg.shift(strings.Join(lpath[idx:], cfg.separator), subset)
+			}
 		}
 	}
 	return subset
