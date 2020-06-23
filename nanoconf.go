@@ -31,7 +31,12 @@ func (ins *Inspector) String(key string, overlay string) string {
 	if overlay != "" {
 		return overlay
 	}
-	return fmt.Sprintf("%s", (*ins.subset)[key])
+	val, ex := (*ins.subset)[key]
+	if ex {
+		return fmt.Sprintf("%s", val)
+	} else {
+		return ""
+	}
 }
 
 // Int returns an integer type of a config value.
