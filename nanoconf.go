@@ -22,8 +22,8 @@ func NewInspector(tree *map[string]interface{}) *Inspector {
 }
 
 // Return the entire tree raw
-func (ins *Inspector) Raw() *map[string]interface{} {
-	return ins.subset
+func (ins *Inspector) Raw() map[string]interface{} {
+	return *ins.subset
 }
 
 // String returns a string type of a config value.
